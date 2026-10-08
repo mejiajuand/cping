@@ -1,4 +1,4 @@
-../bin/main: main.c
+../bin/main: main.c icmp.h
 	mkdir -p ../bin
 	gcc -Wall -Wextra -Wpedantic -std=iso9899:1999 -o ../bin/main main.c
 
