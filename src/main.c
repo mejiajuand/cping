@@ -7,10 +7,10 @@ display_icmp_packet(struct icmp_packet *packet)
 {
 	printf("Packet Type: %u\n", packet->type);
 	printf("Packet Code: %u\n", packet->code);
-	printf("Packet Checksum: %#06x (LE)\n", packet->checksum);
-	printf("Packet Identifier: %u\n", packet->ident);
+	printf("Packet Checksum: %#06x\n", packet->checksum);
+	printf("Packet Identifier: %u (%#06x)\n", packet->ident, packet->ident);
 	printf("Packet Sequence Number: %u\n", packet->seq);
-	printf("Packet Data: %p\n", packet->data);
+	printf("Packet Data: %p\n", (void*)packet->data);
 	printf("Packet Size: %zu bytes\n", sizeof(packet));
 }
 
@@ -19,9 +19,9 @@ main(void)
 {
 	struct icmp_packet p = icmp_echo_packet();
 	struct icmp_packet q = icmp_echo_packet();
-	printf("--- First Echo Packet ---\n");
+	printf("--- First Packet ---\n");
 	display_icmp_packet(&p);
-	printf("\n--- Second Echo Packet --- \n");
+	printf("\n--- Second Packet --- \n");
 	display_icmp_packet(&q);
 	return 0;
 }
