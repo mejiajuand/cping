@@ -9,7 +9,7 @@ struct icmp_packet {
 	uint16_t checksum;
 	uint16_t ident;
 	uint16_t seq;
-	uint32_t *data;
+	uint32_t data;
 };
 
 /* echo message constructor */
