@@ -1,6 +1,6 @@
-../bin/main: main.c icmp.c icmp.h
+../bin/main: main.c icmp.c icmp.h ping.c ping.h
 	mkdir -p ../bin
-	gcc -Wall -Wextra -Wpedantic -std=iso9899:1999 -o ../bin/main main.c icmp.c
+	gcc -Wall -Wextra -Wpedantic -o ../bin/main main.c icmp.c ping.c
 
 run: ../bin/main
 	./../bin/main
