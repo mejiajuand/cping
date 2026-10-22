@@ -22,7 +22,7 @@ checksum(struct icmp_packet *packet)
 {
 	uint32_t sum;
 	sum = htons((packet->type << 8) | packet->code);
-	sum = sum + 0 + packet->ident + packet->sequence + packet->data;
+	sum = sum + packet->ident + packet->sequence + packet->data;
 	sum = (sum & 0xffff) + (sum >> 16);
 	packet->checksum = ~sum;
 }
