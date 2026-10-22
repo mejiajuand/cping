@@ -1,6 +1,9 @@
 #ifndef PING_H
 #define PING_H
 
-void ping(char addr[]);
+#include "icmp.h"
+
+void ping(char[]);
+void show_packet(const struct icmp_packet*);
 
 #endif	/* PING_H */

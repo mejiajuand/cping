@@ -2,26 +2,22 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
-#include <arpa/inet.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include <unistd.h>
 #include <errno.h>
 
-#include <string.h>
-
-#include <stdlib.h>
-#include <stdio.h>
-
-#include "icmp.h"
 #include "ping.h"
 
 void
-ping(char data[])
+ping(char addr[])
 {
-	int s, fd;
-	ssize_t bytes_recv;
+	int s, sockfd;
+	struct addrinfo hints, *res;
 	struct icmp_packet packet;
-	struct addrinfo hints, *result;
+	ssize_t bytes;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -29,48 +25,47 @@ ping(char data[])
 	hints.ai_protocol = 1;
 	hints.ai_flags = 0;
 
-	s = getaddrinfo(data, NULL, &hints, &result);
+	s = getaddrinfo(addr, NULL, &hints, &res);
+	
 	if (s != 0) {
-		fprintf(stderr, "ERROR: getaddrinfo(): %s\n", gai_strerror(s));
+		fprintf(stderr, "getaddrinfo(): %s\n", gai_strerror(s));
 		exit(EXIT_FAILURE);
 	}
 
-	fd = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-	if (fd == -1) {
-		fprintf(stderr, "ERROR: socket(): %s\n", strerror(errno));
+	sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+
+	if (sockfd == -1) {
+		fprintf(stderr, "socket(): %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
-	s = connect(fd, result->ai_addr, result->ai_addrlen);
+	s = connect(sockfd, res->ai_addr, res->ai_addrlen);
+
 	if (s == -1) {
-		fprintf(stderr, "ERROR: connect(): %s\n", strerror(errno));
+		fprintf(stderr, "connect(): %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
 	packet = icmp_echo_packet();
-	packet.checksum = ntohs(packet.checksum);
-	bytes_recv = sendto(fd, &packet, sizeof(packet), 0, result->ai_addr, result->ai_addrlen);
 
+	printf("Pinging %s... ", addr);
+	bytes = sendto(sockfd, &packet, sizeof(packet), 0, res->ai_addr, res->ai_addrlen);
+	printf("received %zu bytes\n", bytes);
+	show_packet(&packet);
+
+	freeaddrinfo(res);
+	close(sockfd);
+}
+
+void
+show_packet(const struct icmp_packet *packet)
+{
 	printf("--- Packet Information ---\n");
-	printf("Type: %u\n", packet.type);
-	printf("Code: %u\n", packet.code);
-	printf("Checksum: %#06x\n", packet.checksum);
-	printf("Identifier: %u\n", packet.ident);
-	printf("Sequence: %u\n", packet.seq);
-	printf("Data: %s\n", &packet.data);
-
-	if (bytes_recv == -1) {
-		fprintf(stderr, "ERROR: sendmsg(): %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-
-	freeaddrinfo(result);
-
-	printf("Received %zu bytes\n", bytes_recv);
-
-	s = close(fd);
-	if (s == -1) {
-		fprintf(stderr, "ERROR: close(): %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+	printf("Type: %u\n", packet->type);
+	printf("Code: %u\n", packet->code);
+	printf("Checksum: %#06x\n", packet->checksum);
+	printf("Identifier: %u\n", packet->ident);
+	printf("Sequence: %u\n", packet->sequence);
+	printf("Data: %#08x\n", packet->data);
+	printf("Size: %zu\n", sizeof(*packet));
 }
