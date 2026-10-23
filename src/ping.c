@@ -60,8 +60,8 @@ ping(char addr[])
 		printf("Received %zu bytes from %s\n", bytes, addr);
 	}
 	printf("\n--- %s ping statistics ---\n", addr);
-	printf("%u packets transmitted, %u packets received, %u%% packet loss\n", i, packet.sequence, 1 - (i / packet.sequence));
-
+	printf("%u packets transmitted, %u packets received, %.0f%% packet loss\n",
+			i, packet.sequence, (1 - ((double)packet.sequence / i)) * 100);
 	freeaddrinfo(res);
 	close(sockfd);
 }
