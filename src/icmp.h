@@ -18,4 +18,7 @@ struct icmp_packet icmp_echo_packet(void);
 /* compute the internet checksum */
 void checksum(struct icmp_packet*);
 
+/* show packet details */
+void show_packet(const struct icmp_packet*);
+
 #endif	/* ICMP_H */

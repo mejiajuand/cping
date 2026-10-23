@@ -9,12 +9,13 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "icmp.h"
 #include "ping.h"
 
 void
 ping(char addr[])
 {
-	int s, sockfd;
+	int i, s, sockfd;
 	struct addrinfo hints, *res;
 	struct icmp_packet packet;
 	ssize_t bytes;
@@ -46,26 +47,21 @@ ping(char addr[])
 		exit(EXIT_FAILURE);
 	}
 
-	packet = icmp_echo_packet();
+	printf("Pinging %s with %zu bytes of data\n", addr, sizeof(packet));
+	for (i = 0; i < 4; i++) {
+		packet = icmp_echo_packet();
+		bytes = sendto(sockfd, &packet, sizeof(packet), MSG_CONFIRM, res->ai_addr, res->ai_addrlen);
 
-	printf("Pinging %s... ", addr);
-	bytes = sendto(sockfd, &packet, sizeof(packet), 0, res->ai_addr, res->ai_addrlen);
-	printf("received %zu bytes\n", bytes);
-	show_packet(&packet);
+		if (bytes == -1) {
+			fprintf(stderr, "sendto(): %s\n", strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+
+		printf("Received %zu bytes from %s\n", bytes, addr);
+	}
+	printf("\n--- %s ping statistics ---\n", addr);
+	printf("%u packets transmitted, %u packets received, %u%% packet loss\n", i, packet.sequence, 1 - (i / packet.sequence));
 
 	freeaddrinfo(res);
 	close(sockfd);
-}
-
-void
-show_packet(const struct icmp_packet *packet)
-{
-	printf("--- Packet Information ---\n");
-	printf("Type: %u\n", packet->type);
-	printf("Code: %u\n", packet->code);
-	printf("Checksum: %#06x\n", packet->checksum);
-	printf("Identifier: %u\n", packet->ident);
-	printf("Sequence: %u\n", packet->sequence);
-	printf("Data: %#08x\n", packet->data);
-	printf("Size: %zu\n", sizeof(*packet));
 }
